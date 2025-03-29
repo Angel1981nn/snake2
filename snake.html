@@ -3,69 +3,100 @@
 <head>
     <meta charset="UTF-8">
     <title>Telegram Snake Game</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>  <!-- Добавляем Telegram WebApp API -->
     <style>
-        body { margin: 0; padding: 0; background: #1e1e1e; }
-        canvas { display: block; margin: 0 auto; background: black; }
+        body { 
+            margin: 0; 
+            padding: 0; 
+            background: #1e1e1e; 
+            touch-action: none;  <!-- Отключаем масштабирование на мобильных -->
+        }
+        canvas { 
+            display: block; 
+            margin: 0 auto; 
+            background: black; 
+            cursor: pointer;
+        }
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin-top: 10px;
+        }
+        button {
+            padding: 10px 15px;
+            margin: 0 5px;
+            font-size: 16px;
+        }
     </style>
 </head>
 <body>
     <canvas id="gameCanvas" width="300" height="300"></canvas>
+    <div class="controls">
+        <button id="up">⬆️</button>
+        <button id="left">⬅️</button>
+        <button id="down">⬇️</button>
+        <button id="right">➡️</button>
+    </div>
+
     <script>
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
 
-        // Размер клетки
+        // Инициализация игры
         const box = 20;
         let snake = [{ x: 9 * box, y: 10 * box }];
-        let food = { x: Math.floor(Math.random() * 15) * box, y: Math.floor(Math.random() * 15) * box };
+        let food = { 
+            x: Math.floor(Math.random() * 15) * box, 
+            y: Math.floor(Math.random() * 15) * box 
+        };
         let direction = null;
         let score = 0;
+        let gameSpeed = 100; // Скорость обновления (мс)
 
-        // Рисуем игру
+        // Основная функция отрисовки
         function drawGame() {
-            // Очищаем canvas
+            // Очистка экрана
             ctx.fillStyle = "black";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Рисуем змейку
+            // Отрисовка змейки
             ctx.fillStyle = "lime";
             snake.forEach(segment => ctx.fillRect(segment.x, segment.y, box, box));
 
-            // Рисуем еду
+            // Отрисовка еды
             ctx.fillStyle = "red";
             ctx.fillRect(food.x, food.y, box, box);
 
-            // Текущий счет
+            // Отрисовка счёта
             ctx.fillStyle = "white";
             ctx.font = "20px Arial";
-            ctx.fillText("Счет: " + score, 10, 20);
+            ctx.fillText("Счёт: " + score, 10, 20);
         }
 
-        // Обновляем игру
+        // Обновление игрового состояния
         function updateGame() {
             const head = { x: snake[0].x, y: snake[0].y };
 
-            // Двигаем змейку
+            // Движение змейки
             if (direction === "LEFT") head.x -= box;
             if (direction === "RIGHT") head.x += box;
             if (direction === "UP") head.y -= box;
             if (direction === "DOWN") head.y += box;
 
-            // Проверяем столкновения
+            // Проверка столкновений
             if (
                 head.x < 0 || head.y < 0 ||
                 head.x >= canvas.width || head.y >= canvas.height ||
                 snake.some(segment => segment.x === head.x && segment.y === head.y)
             ) {
-                alert("Игра окончена! Счет: " + score);
+                alert("Game Over! Score: " + score);
                 resetGame();
                 return;
             }
 
-            // Добавляем новую голову
-            snake.unshift(head);
+            snake.unshift(head); // Добавляем новую голову
 
-            // Проверяем, съела ли змейка еду
+            // Проверка, съела ли змейка еду
             if (head.x === food.x && head.y === food.y) {
                 score++;
                 food = {
@@ -80,25 +111,38 @@
         // Сброс игры
         function resetGame() {
             snake = [{ x: 9 * box, y: 10 * box }];
-            food = { x: Math.floor(Math.random() * 15) * box, y: Math.floor(Math.random() * 15) * box };
+            food = { 
+                x: Math.floor(Math.random() * 15) * box, 
+                y: Math.floor(Math.random() * 15) * box 
+            };
             direction = null;
             score = 0;
         }
 
-        // Управление с клавиатуры
+        // Управление через кнопки
+        document.getElementById("up").addEventListener("click", () => direction = "UP");
+        document.getElementById("down").addEventListener("click", () => direction = "DOWN");
+        document.getElementById("left").addEventListener("click", () => direction = "LEFT");
+        document.getElementById("right").addEventListener("click", () => direction = "RIGHT");
+
+        // Управление через клавиатуру (если разрешено в WebApp)
         document.addEventListener("keydown", (e) => {
-            if (e.key === "ArrowLeft" && direction !== "RIGHT") direction = "LEFT";
-            if (e.key === "ArrowRight" && direction !== "LEFT") direction = "RIGHT";
-            if (e.key === "ArrowUp" && direction !== "DOWN") direction = "UP";
-            if (e.key === "ArrowDown" && direction !== "UP") direction = "DOWN";
+            if (e.key === "ArrowLeft") direction = "LEFT";
+            if (e.key === "ArrowRight") direction = "RIGHT";
+            if (e.key === "ArrowUp") direction = "UP";
+            if (e.key === "ArrowDown") direction = "DOWN";
         });
 
-        // Запускаем игру (60 FPS)
+        // Запуск игрового цикла
         function gameLoop() {
             updateGame();
             drawGame();
         }
-        setInterval(gameLoop, 1000 / 10);
+        setInterval(gameLoop, gameSpeed);
+
+        // Инициализация Telegram WebApp
+        Telegram.WebApp.ready();  // Сообщаем Telegram, что WebApp готов
+        Telegram.WebApp.expand(); // Разворачиваем на весь экран
     </script>
 </body>
 </html>
